@@ -11,6 +11,7 @@ export const NAV: { to: string; label: string; icon: string; perm: Permission | 
   { to: '/access', label: 'Receptionist Access', icon: '🔑', perm: 'access' },
   { to: '/appointments', label: 'Appointments', icon: '📅', perm: 'appointments' },
   { to: '/conferences', label: 'Conferences', icon: '🎤', perm: 'conferences' },
+  { to: '/banners', label: 'Banner Management', icon: '🖼', perm: 'banners' },
   { to: '/billing', label: 'Plans & Billing', icon: '💳', perm: 'billing' },
   { to: '/tickets', label: 'Help Desk', icon: '🛟', perm: 'tickets' },
   { to: '/reports', label: 'Reports', icon: '📊', perm: 'reports' },

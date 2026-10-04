@@ -98,11 +98,12 @@ function url(path: string, query?: Query) {
 async function request<T>(
   method: string,
   path: string,
-  opts: { query?: Query; body?: unknown; auth?: boolean; text?: string } = {},
+  opts: { query?: Query; body?: unknown; auth?: boolean; text?: string; file?: Blob } = {},
   retried = false,
 ): Promise<{ data: T; meta?: Meta }> {
   const headers: Record<string, string> = {};
-  if (opts.text !== undefined) headers['Content-Type'] = 'text/csv';
+  if (opts.file !== undefined) headers['Content-Type'] = opts.file.type || 'application/octet-stream';
+  else if (opts.text !== undefined) headers['Content-Type'] = 'text/csv';
   else if (opts.body !== undefined) headers['Content-Type'] = 'application/json';
   if (opts.auth !== false && accessToken) headers.Authorization = `Bearer ${accessToken}`;
 
@@ -111,7 +112,7 @@ async function request<T>(
     res = await fetch(url(path, opts.query), {
       method,
       headers,
-      body: opts.text ?? (opts.body === undefined ? undefined : JSON.stringify(opts.body)),
+      body: opts.file ?? opts.text ?? (opts.body === undefined ? undefined : JSON.stringify(opts.body)),
     });
   } catch {
     throw new ApiError('Cannot reach the server. Is the API running?', 0, 'NETWORK');
@@ -158,6 +159,8 @@ export const api = {
   post: <T>(path: string, body: unknown = {}, auth = true) => request<T>('POST', path, { body, auth }),
   /** Raw CSV upload. */
   postCsv: <T>(path: string, text: string, query?: Query) => request<T>('POST', path, { text, query }),
+  /** Raw file upload (image bytes as the body). */
+  postFile: <T>(path: string, file: Blob, query?: Query) => request<T>('POST', path, { file, query }),
   put: <T>(path: string, body: unknown) => request<T>('PUT', path, { body }),
   patch: <T>(path: string, body: unknown) => request<T>('PATCH', path, { body }),
   delete: <T>(path: string) => request<T>('DELETE', path),

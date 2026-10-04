@@ -14,6 +14,7 @@ export type Permission =
   | 'access'
   | 'appointments'
   | 'conferences'
+  | 'banners'
   | 'billing'
   | 'tickets'
   | 'faqs'
@@ -241,4 +242,56 @@ export interface AuditRow {
   before?: unknown;
   after?: unknown;
   ip?: string;
+}
+
+export type BannerTargeting = 'all' | 'state' | 'city' | 'multiple';
+export type BannerStatus = 'draft' | 'active' | 'inactive';
+export type BannerEffectiveStatus = BannerStatus | 'scheduled' | 'expired';
+export type RedirectType = 'none' | 'internal' | 'external';
+
+export interface Banner {
+  id: string;
+  title: string;
+  description: string;
+  imageKey: string;
+  imageUrl: string | null;
+  imageMissing: boolean;
+  mobileImageKey: string | null;
+  mobileImageUrl: string | null;
+  showText: boolean;
+  redirectType: RedirectType;
+  redirectTarget: string | null;
+  targeting: BannerTargeting;
+  locations: { id: string; name: string; type: 'state' | 'city' | null; status: string }[];
+  status: BannerStatus;
+  effectiveStatus: BannerEffectiveStatus;
+  startDate: string | null;
+  endDate: string | null;
+  priority: number;
+  createdAt: string;
+  updatedAt: string;
+}
+
+export interface BannerOptions {
+  internalTargets: { key: string; label: string }[];
+  states: { id: string; name: string; cities: { id: string; name: string }[] }[];
+}
+
+export interface LocationRow {
+  id: string;
+  name: string;
+  code: string | null;
+  type: 'country' | 'state' | 'city';
+  parentId: string | null;
+  parentName: string | null;
+  aliases: string[];
+  status: 'active' | 'inactive';
+}
+
+export interface UploadedImage {
+  key: string;
+  url: string;
+  width: number;
+  height: number;
+  bytes: number;
 }

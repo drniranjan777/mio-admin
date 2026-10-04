@@ -53,10 +53,16 @@ Users → **Import doctors (CSV)** → *Download demo sheet* (same file as `back
 
 Limits: 1,000 rows / 2 MB per file. Imported doctors sign in with OTP on their mobile and appear in the MR Master MCL; if MR-call days/times are filled in, their registration is complete, otherwise they finish that step in the app.
 
+## Banner management
+
+Banner Management → **Add banner**: title, description, image (JPG/PNG/WEBP, max 2 MB, wide — e.g. 1080×490; preview shows the app shape), optional mobile image, "show title on banner", target audience (all / one state / one city / multiple), tap action (none / app screen / https link), status, start–end dates and priority.
+
+Doctors see banners for their city first, then their state, then "all locations", each ordered by priority (1 = first). *Locations* tab: add cities/states, aliases for other spellings (Bangalore → Bengaluru), deactivate. Requires the **Banners** section in the admin's role.
+
 ## Modules
 
 Dashboard · Users (search, detail, activate/deactivate) · Receptionist Access ·
-Appointments · Conferences · Plans & Billing (plans, orders, subscriptions) ·
+Appointments · Conferences · Banner Management (banners, locations) · Plans & Billing (plans, orders, subscriptions) ·
 Help Desk (assignment) · Reports (Excel/CSV export) · FAQs · Terms & Policies · Settings (help desk topics & contacts) · Audit Log · Admin Team & Roles.
 
 ## Security notes

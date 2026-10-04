@@ -40,6 +40,7 @@ const TONE: Record<string, string> = {
   published: 'green',
   resolved: 'green',
   completed: 'blue',
+  scheduled: 'blue',
   in_progress: 'orange',
   pending: 'orange',
   open: 'orange',

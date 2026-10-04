@@ -9,6 +9,8 @@ import type { Permission } from './lib/types';
 import { Access } from './pages/Access';
 import { Appointments } from './pages/Appointments';
 import { Audit } from './pages/Audit';
+import { BannerForm } from './pages/BannerForm';
+import { Banners } from './pages/Banners';
 import { Billing } from './pages/Billing';
 import { ChangePassword } from './pages/ChangePassword';
 import { Conferences } from './pages/Conferences';
@@ -52,7 +54,7 @@ export function App() {
   return (
     <ToastProvider>
       <ConfirmProvider>
-      <AuthProvider>
+        <AuthProvider>
         <BrowserRouter>
           <Routes>
             <Route path="/login" element={<Login />} />
@@ -68,6 +70,9 @@ export function App() {
               <Route path="access" element={guarded('access', <Access />)} />
               <Route path="appointments" element={guarded('appointments', <Appointments />)} />
               <Route path="conferences" element={guarded('conferences', <Conferences />)} />
+              <Route path="banners" element={guarded('banners', <Banners />)} />
+              <Route path="banners/new" element={guarded('banners', <BannerForm />)} />
+              <Route path="banners/:id/edit" element={guarded('banners', <BannerForm />)} />
               <Route path="billing" element={guarded('billing', <Billing />)} />
               <Route path="tickets" element={guarded('tickets', <Tickets />)} />
               <Route path="reports" element={guarded('reports', <Reports />)} />

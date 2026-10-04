@@ -14,6 +14,7 @@ const PERMISSION_HELP: Record<Permission, string> = {
   access: 'Receptionist ↔ doctor access',
   appointments: 'View and act on appointments',
   conferences: 'Create and edit conferences',
+  banners: 'Location-based home banners and locations',
   billing: 'Plans, payments, subscriptions',
   tickets: 'Help desk requests (can be assigned tasks)',
   faqs: 'FAQ content',
