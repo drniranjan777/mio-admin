@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet } from 'react-router-dom';
 
 import { useAuth } from '../auth/AuthContext';
 import type { Permission } from '../lib/types';
+import { Logo } from './Logo';
 
 /** `perm: null` = Super Admin only. */
 export const NAV: { to: string; label: string; icon: string; perm: Permission | null; end?: boolean }[] = [
@@ -32,11 +33,8 @@ export function Layout() {
     <div className={`shell ${open ? 'nav-open' : ''}`}>
       <aside className="sidebar">
         <div className="brand">
-          <img src="/logo.png" alt="" width={32} height={32} />
-          <div>
-            <strong>Mio Doctors</strong>
-            <span>Admin Panel</span>
-          </div>
+          <Logo width={196} />
+          <span>Admin Panel</span>
         </div>
         <nav>
           {items.map((n) => (

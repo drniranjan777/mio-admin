@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { Logo } from '../components/Logo';
 import { Button, Field, useToast } from '../components/ui';
 
 /** Own password change. Shown on its own when a temporary password must be replaced. */
@@ -38,7 +39,7 @@ export function ChangePassword({ forced = false }: { forced?: boolean }) {
 
   const form = (
     <form className="login-card" onSubmit={submit}>
-      <img src="/logo.png" alt="" width={48} height={48} />
+      <Logo width={240} />
       <h1>{forced ? 'Set your password' : 'Change password'}</h1>
       <p className="muted">
         {forced ? 'You signed in with a temporary password. Choose your own to continue.' : 'All your other sessions will be signed out.'}

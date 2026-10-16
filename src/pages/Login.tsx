@@ -3,6 +3,7 @@ import { Navigate } from 'react-router-dom';
 
 import { ApiError } from '../api/client';
 import { useAuth } from '../auth/AuthContext';
+import { Logo } from '../components/Logo';
 import { Button, Field } from '../components/ui';
 
 export function Login() {
@@ -30,7 +31,7 @@ export function Login() {
   return (
     <div className="login-page">
       <form className="login-card" onSubmit={submit}>
-        <img src="/logo.png" alt="" width={56} height={56} />
+        <Logo width={240} />
         <h1>Mio Doctors Admin</h1>
         <p className="muted">Sign in with your administrator account.</p>
         <Field label="Email">
