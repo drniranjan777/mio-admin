@@ -20,7 +20,7 @@ const PERMISSION_HELP: Record<Permission, string> = {
   faqs: 'FAQ content',
   content: 'Terms & policies',
   settings: 'Help desk contacts and topics',
-  reports: 'Run and export reports (Excel/CSV)',
+  reports: 'Run and export reports (Excel/PDF)',
   audit: 'Read the audit log',
 };
 

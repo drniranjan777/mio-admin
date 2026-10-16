@@ -18,6 +18,7 @@ import { Content } from './pages/Content';
 import { Dashboard } from './pages/Dashboard';
 import { Faqs } from './pages/Faqs';
 import { Login } from './pages/Login';
+import { Recovery } from './pages/Recovery';
 import { Reports } from './pages/Reports';
 import { Settings } from './pages/Settings';
 import { Team } from './pages/Team';
@@ -67,6 +68,7 @@ export function App() {
             >
               <Route index element={<Home />} />
               <Route path="users" element={guarded('users', <Users />)} />
+              <Route path="recovery" element={guarded('users', <Recovery />)} />
               <Route path="access" element={guarded('access', <Access />)} />
               <Route path="appointments" element={guarded('appointments', <Appointments />)} />
               <Route path="conferences" element={guarded('conferences', <Conferences />)} />

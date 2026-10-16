@@ -106,8 +106,10 @@ export function Users() {
 
 const PROFILE_FIELDS: [string, string][] = [
   ['code', 'Code'],
+  ['legacyCode', 'Old code (before Oct 2026)'],
   ['qualification', 'Qualification'],
   ['specialty', 'Specialty'],
+  ['subSpecialty', 'Sub-specialty'],
   ['gender', 'Gender'],
   ['dateOfBirth', 'Date of birth'],
   ['email', 'Email'],
@@ -117,10 +119,55 @@ const PROFILE_FIELDS: [string, string][] = [
   ['division', 'Division'],
 ];
 
+/**
+ * Moves the user's login to a new number (e.g. a doctor who lost the old SIM
+ * and called support). Every session is signed out; the user is notified.
+ */
+function ChangeMobile({ userId, current, onClose, onSaved }: { userId: string; current: string; onClose: () => void; onSaved: () => void }) {
+  const [mobile, setMobile] = useState('');
+  const [reason, setReason] = useState('');
+  const { run, busy, fields } = useAction();
+
+  async function submit(e: FormEvent) {
+    e.preventDefault();
+    if (await run(() => api.patch(`/admin/users/${userId}/mobile`, { mobile, ...(reason.trim() && { reason: reason.trim() }) }), 'Mobile number changed')) onSaved();
+  }
+
+  return (
+    <Modal
+      title="Change login mobile"
+      onClose={onClose}
+      footer={
+        <>
+          <Button variant="ghost" onClick={onClose}>
+            Cancel
+          </Button>
+          <Button form="change-mobile" type="submit" busy={busy}>
+            Change number
+          </Button>
+        </>
+      }
+    >
+      <form id="change-mobile" className="stack" onSubmit={submit}>
+        <p className="muted small m0">
+          Current: +91 {current || '—'}. Verify the person's identity first. They are signed out everywhere and sign in again with the new number; their code and data stay the same.
+        </p>
+        <Field label="New mobile *" error={fields.mobile}>
+          <input required inputMode="numeric" pattern="[5-9][0-9]{9}" maxLength={10} value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))} />
+        </Field>
+        <Field label="Reason" hint="Saved in the audit log, e.g. ticket number" error={fields.reason}>
+          <input maxLength={200} value={reason} onChange={(e) => setReason(e.target.value)} />
+        </Field>
+      </form>
+    </Modal>
+  );
+}
+
 function UserDrawer({ id, onClose, onChanged }: { id: string; onClose: () => void; onChanged: () => void }) {
   const state = useApi(() => api.get<UserDetail>(`/admin/users/${id}`), [id]);
   const { run, busy } = useAction();
   const confirm = useConfirm();
+  const [changingMobile, setChangingMobile] = useState(false);
 
   async function toggle(d: UserDetail) {
     const next = d.user.status === 'active' ? 'inactive' : 'active';
@@ -157,11 +204,28 @@ function UserDrawer({ id, onClose, onChanged }: { id: string; onClose: () => voi
                 <div className="row gap">
                   <Badge value={d.user.status} />
                   {d.user.status !== 'deleted' && (
-                    <Button variant={d.user.status === 'active' ? 'danger' : 'success'} size="sm" busy={busy} onClick={() => toggle(d)}>
-                      {d.user.status === 'active' ? 'Deactivate' : 'Activate'}
-                    </Button>
+                    <>
+                      <Button variant="ghost" size="sm" onClick={() => setChangingMobile(true)}>
+                        Change mobile
+                      </Button>
+                      <Button variant={d.user.status === 'active' ? 'danger' : 'success'} size="sm" busy={busy} onClick={() => toggle(d)}>
+                        {d.user.status === 'active' ? 'Deactivate' : 'Activate'}
+                      </Button>
+                    </>
                   )}
                 </div>
+                {changingMobile && (
+                  <ChangeMobile
+                    userId={id}
+                    current={d.user.mobile ?? ''}
+                    onClose={() => setChangingMobile(false)}
+                    onSaved={() => {
+                      setChangingMobile(false);
+                      state.reload();
+                      onChanged();
+                    }}
+                  />
+                )}
               </div>
 
               <div className="grid-2">
@@ -294,7 +358,7 @@ function AddUser({ onClose, onCreated }: { onClose: () => void; onCreated: (id: 
             <input required minLength={2} value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
           <Field label="Mobile number *" hint="10-digit Indian mobile — used for OTP sign-in" error={fields.mobile}>
-            <input required inputMode="numeric" pattern="[6-9][0-9]{9}" maxLength={10} value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))} />
+            <input required inputMode="numeric" pattern="[5-9][0-9]{9}" maxLength={10} value={mobile} onChange={(e) => setMobile(e.target.value.replace(/\D/g, ''))} />
           </Field>
         </div>
         {role === 'receptionist' && (

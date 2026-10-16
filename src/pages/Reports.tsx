@@ -27,8 +27,10 @@ export function Reports() {
   const [shown, setShown] = useState<{ type: string; query: typeof query } | null>(null);
   const { run, busy } = useAction();
 
-  const exportAs = (format: 'xlsx' | 'csv', reportType = type) =>
-    run(() => api.download(`/reports/${reportType}`, { ...query, format }, `${reportType}_${todayIso()}.${format}`), format === 'xlsx' ? 'Excel file downloaded' : 'CSV downloaded');
+  // Reports download as Excel or PDF only; doctor columns are limited to
+  // name, specialty, clinic/hospital and city (no mobile numbers or dates of birth).
+  const exportAs = (format: 'xlsx' | 'pdf', reportType = type) =>
+    run(() => api.download(`/reports/${reportType}`, { ...query, format }, `${reportType}_${todayIso()}.${format}`), format === 'xlsx' ? 'Excel file downloaded' : 'PDF downloaded');
 
   return (
     <>
@@ -78,8 +80,8 @@ export function Reports() {
                   <Button variant="success" busy={busy} onClick={() => exportAs('xlsx', effectiveType)}>
                     ⬇ Export Excel
                   </Button>
-                  <Button variant="ghost" busy={busy} onClick={() => exportAs('csv', effectiveType)}>
-                    ⬇ Export CSV
+                  <Button variant="ghost" busy={busy} onClick={() => exportAs('pdf', effectiveType)}>
+                    ⬇ Export PDF
                   </Button>
                 </div>
               </Card>

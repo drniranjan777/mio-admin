@@ -159,10 +159,13 @@ export interface Plan {
   code: string;
   role: Role;
   name: string;
-  period: 'monthly' | 'yearly' | 'lifetime';
+  period: 'monthly' | 'yearly' | 'lifetime' | 'trial';
   pricePaise: number;
   mrpPaise: number | null;
   taxPercent: number;
+  sacCode: string | null;
+  durationDays: number | null;
+  howToAvail: string[];
   features: string[];
   active: boolean;
   sort: number;
@@ -258,6 +261,13 @@ export interface Banner {
   imageMissing: boolean;
   mobileImageKey: string | null;
   mobileImageUrl: string | null;
+  mediaType: BannerMediaType;
+  videoKey: string | null;
+  videoUrl: string | null;
+  videoMissing: boolean;
+  specialties: string[];
+  genders: Gender[];
+  locationClasses: LocationClass[];
   showText: boolean;
   redirectType: RedirectType;
   redirectTarget: string | null;
@@ -272,9 +282,39 @@ export interface Banner {
   updatedAt: string;
 }
 
+export type BannerMediaType = 'image' | 'video';
+export type Gender = 'male' | 'female' | 'other';
+export type LocationClass = 'Metro' | 'Non-Metro';
+
 export interface BannerOptions {
   internalTargets: { key: string; label: string }[];
+  specialties: string[];
+  genders: Gender[];
+  locationClasses: LocationClass[];
   states: { id: string; name: string; cities: { id: string; name: string }[] }[];
+}
+
+export interface UploadedVideo {
+  key: string;
+  url: string;
+  bytes: number;
+}
+
+export interface RecoveryRequest {
+  id: string;
+  role: Role;
+  oldMobile: string;
+  newMobile: string;
+  code: string | null;
+  name: string | null;
+  note: string | null;
+  account: { id: string; name: string; mobile: string | null; status: string } | null;
+  codeMatches: boolean;
+  status: 'pending' | 'approved' | 'rejected';
+  adminNote: string | null;
+  reviewedBy: { id: string; name: string } | null;
+  reviewedAt: string | null;
+  createdAt: string;
 }
 
 export interface LocationRow {

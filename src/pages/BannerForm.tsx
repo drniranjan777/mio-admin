@@ -1,14 +1,30 @@
-import { useEffect, useState, type FormEvent } from 'react';
+import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 
 import { api } from '../api/client';
 import { ImageUpload } from '../components/ImageUpload';
 import { LocationPicker } from '../components/LocationPicker';
 import { Button, Card, Field, Loadable } from '../components/ui';
-import type { Banner, BannerOptions, BannerStatus, BannerTargeting, RedirectType } from '../lib/types';
+import { VideoUpload } from '../components/VideoUpload';
+import type { Banner, BannerMediaType, BannerOptions, BannerStatus, BannerTargeting, Gender, LocationClass, RedirectType } from '../lib/types';
 import { useAction } from '../lib/useAction';
 import { useApi } from '../lib/useApi';
 import { BannerPreview, STATUS_LABEL } from './Banners';
+
+const GENDER_LABEL: Record<Gender, string> = { male: 'Male', female: 'Female', other: 'Other' };
+
+const toggle = <T,>(list: T[], item: T): T[] => (list.includes(item) ? list.filter((x) => x !== item) : [...list, item]);
+
+/** Like Field, but a div: it holds several checkboxes/radios, each with its own label. */
+function FieldGroup({ label, hint, children }: { label: string; hint?: string; children: ReactNode }) {
+  return (
+    <div className="field" role="group" aria-label={label}>
+      <span className="field-label">{label}</span>
+      {children}
+      {hint && <span className="field-hint">{hint}</span>}
+    </div>
+  );
+}
 
 const TARGETING: { value: BannerTargeting; label: string; hint: string }[] = [
   { value: 'all', label: 'All locations', hint: 'Every doctor' },
@@ -40,6 +56,11 @@ interface Draft {
   description: string;
   image: { key: string; url: string } | null;
   mobileImage: { key: string; url: string } | null;
+  mediaType: BannerMediaType;
+  video: { key: string; url: string } | null;
+  specialties: string[];
+  genders: Gender[];
+  locationClasses: LocationClass[];
   showText: boolean;
   targeting: BannerTargeting;
   locationIds: string[];
@@ -58,6 +79,11 @@ function initial(b: Banner | null): Draft {
     description: b?.description ?? '',
     image: b?.imageKey && b.imageUrl ? { key: b.imageKey, url: b.imageUrl } : null,
     mobileImage: b?.mobileImageKey && b.mobileImageUrl ? { key: b.mobileImageKey, url: b.mobileImageUrl } : null,
+    mediaType: b?.mediaType ?? 'image',
+    video: b?.videoKey && b.videoUrl ? { key: b.videoKey, url: b.videoUrl } : null,
+    specialties: b?.specialties ?? [],
+    genders: b?.genders ?? [],
+    locationClasses: b?.locationClasses ?? [],
     showText: b?.showText ?? false,
     targeting: b?.targeting ?? 'all',
     locationIds: b?.locations.map((l) => l.id) ?? [],
@@ -95,7 +121,8 @@ function Editor({ banner, options }: { banner: Banner | null; options: BannerOpt
   function validate(): Record<string, string> {
     const e: Record<string, string> = {};
     if (d.title.trim().length < 3) e.title = 'At least 3 characters';
-    if (!d.image) e.imageKey = 'Upload the banner image';
+    if (!d.image) e.imageKey = d.mediaType === 'video' ? 'Upload a cover image for the video' : 'Upload the banner image';
+    if (d.mediaType === 'video' && !d.video) e.videoKey = 'Upload the video';
     if (d.targeting !== 'all' && d.locationIds.length === 0) e.locationIds = 'Pick at least one location';
     if ((d.targeting === 'state' || d.targeting === 'city') && d.locationIds.length !== 1) e.locationIds = `Pick exactly one ${d.targeting}`;
     if (d.redirectType === 'internal' && !d.internalTarget) e.redirectTarget = 'Choose an app screen';
@@ -116,6 +143,11 @@ function Editor({ banner, options }: { banner: Banner | null; options: BannerOpt
       description: d.description,
       imageKey: d.image!.key,
       mobileImageKey: d.mobileImage?.key ?? null,
+      mediaType: d.mediaType,
+      videoKey: d.mediaType === 'video' ? (d.video?.key ?? null) : null,
+      specialties: d.specialties,
+      genders: d.genders,
+      locationClasses: d.locationClasses,
       showText: d.showText,
       targeting: d.targeting,
       locationIds: d.targeting === 'all' ? [] : d.locationIds,
@@ -154,7 +186,34 @@ function Editor({ banner, options }: { banner: Banner | null; options: BannerOpt
               <Field label="Description" hint="Optional · up to 300 characters" error={errors.description}>
                 <textarea rows={2} maxLength={300} value={d.description} onChange={(e) => set('description', e.target.value)} />
               </Field>
-              <ImageUpload label="Banner image *" value={d.image?.key ?? null} url={d.image?.url ?? null} missing={banner?.imageMissing && d.image?.key === banner.imageKey} error={errors.imageKey} onChange={(img) => set('image', img)} />
+              <FieldGroup label="Banner type">
+                <div className="row gap" role="radiogroup" aria-label="Banner type">
+                  {(['image', 'video'] as const).map((m) => (
+                    <label key={m} className="check">
+                      <input type="radio" name="mediaType" checked={d.mediaType === m} onChange={() => set('mediaType', m)} /> {m === 'image' ? 'Image' : 'Video'}
+                    </label>
+                  ))}
+                </div>
+              </FieldGroup>
+              {d.mediaType === 'video' && (
+                <VideoUpload
+                  label="Banner video *"
+                  value={d.video?.key ?? null}
+                  url={d.video?.url ?? null}
+                  missing={banner?.videoMissing && d.video?.key === banner.videoKey}
+                  error={errors.videoKey}
+                  onChange={(v) => set('video', v)}
+                />
+              )}
+              <ImageUpload
+                label={d.mediaType === 'video' ? 'Cover image *' : 'Banner image *'}
+                hint={d.mediaType === 'video' ? 'Shown while the video loads, and by older app versions' : undefined}
+                value={d.image?.key ?? null}
+                url={d.image?.url ?? null}
+                missing={banner?.imageMissing && d.image?.key === banner.imageKey}
+                error={errors.imageKey}
+                onChange={(img) => set('image', img)}
+              />
               <ImageUpload
                 label="Mobile banner image (optional)"
                 hint="Used by the app instead of the main image when set"
@@ -191,6 +250,41 @@ function Editor({ banner, options }: { banner: Banner | null; options: BannerOpt
             <p className="muted small">
               Doctors see city banners first, then state banners, then banners for all locations — each group ordered by priority. A city doctor also gets their state's banners.
             </p>
+          </Card>
+
+          <Card title="Doctor audience">
+            <p className="muted small m0">Leave a group empty to include everyone. Filters combine: a doctor must match every group you set.</p>
+            <div className="stack">
+              <FieldGroup label="Specialty" hint={d.specialties.length ? `${d.specialties.length} selected` : 'All specialties'}>
+                <div className="check-grid">
+                  {options.specialties.map((s) => (
+                    <label key={s} className="check">
+                      <input type="checkbox" checked={d.specialties.includes(s)} onChange={() => set('specialties', toggle(d.specialties, s))} /> {s}
+                    </label>
+                  ))}
+                </div>
+              </FieldGroup>
+              <div className="form-grid">
+                <FieldGroup label="Gender" hint={d.genders.length ? undefined : 'All genders'}>
+                  <div className="row gap">
+                    {options.genders.map((g) => (
+                      <label key={g} className="check">
+                        <input type="checkbox" checked={d.genders.includes(g)} onChange={() => set('genders', toggle(d.genders, g))} /> {GENDER_LABEL[g]}
+                      </label>
+                    ))}
+                  </div>
+                </FieldGroup>
+                <FieldGroup label="Class of Clinic / Hospital" hint={d.locationClasses.length ? undefined : 'Metro and Non-Metro'}>
+                  <div className="row gap">
+                    {options.locationClasses.map((c) => (
+                      <label key={c} className="check">
+                        <input type="checkbox" checked={d.locationClasses.includes(c)} onChange={() => set('locationClasses', toggle(d.locationClasses, c))} /> {c}
+                      </label>
+                    ))}
+                  </div>
+                </FieldGroup>
+              </div>
+            </div>
           </Card>
 
           <Card title="When tapped">

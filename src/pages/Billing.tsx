@@ -75,10 +75,14 @@ function PlanForm({ plan, onClose, onSaved }: { plan: Plan | null; onClose: () =
     price: plan ? String(plan.pricePaise / 100) : '',
     mrp: plan?.mrpPaise != null ? String(plan.mrpPaise / 100) : '',
     taxPercent: String(plan?.taxPercent ?? 18),
+    sacCode: plan?.sacCode ?? '',
+    durationDays: plan?.durationDays != null ? String(plan.durationDays) : '60',
+    howToAvail: (plan?.howToAvail ?? []).join('\n'),
     features: (plan?.features ?? []).join('\n'),
     active: plan?.active ?? true,
     sort: String(plan?.sort ?? 0),
   });
+  const trial = form.period === 'trial';
   const { run, busy, fields } = useAction();
   const set = (k: keyof typeof form) => (e: { target: { value: string } }) => setForm((f) => ({ ...f, [k]: e.target.value }));
 
@@ -90,9 +94,12 @@ function PlanForm({ plan, onClose, onSaved }: { plan: Plan | null; onClose: () =
       role: form.role,
       name: form.name.trim(),
       period: form.period,
-      pricePaise: toPaise(form.price),
+      pricePaise: trial ? 0 : toPaise(form.price),
       ...(form.mrp !== '' && { mrpPaise: toPaise(form.mrp) }),
       taxPercent: Number(form.taxPercent),
+      ...(form.sacCode.trim() && { sacCode: form.sacCode.trim() }),
+      ...(trial && { durationDays: Number(form.durationDays) }),
+      howToAvail: form.howToAvail.split('\n').map((s) => s.trim()).filter(Boolean),
       features: form.features.split('\n').map((f) => f.trim()).filter(Boolean),
       active: form.active,
       sort: Number(form.sort) || 0,
@@ -135,22 +142,35 @@ function PlanForm({ plan, onClose, onSaved }: { plan: Plan | null; onClose: () =
             <option value="monthly">Monthly (30 days)</option>
             <option value="yearly">Yearly (365 days)</option>
             <option value="lifetime">Lifetime</option>
+            <option value="trial">Free trial (once per account)</option>
           </select>
         </Field>
-        <Field label="Price ₹ (incl. GST) *" error={fields.pricePaise}>
-          <input required type="number" min="0" step="0.01" value={form.price} onChange={set('price')} />
-        </Field>
+        {trial ? (
+          <Field label="Free days *" hint="e.g. 60 = 2 months" error={fields.durationDays}>
+            <input required type="number" min="1" max="3650" value={form.durationDays} onChange={set('durationDays')} />
+          </Field>
+        ) : (
+          <Field label="Price ₹ (incl. GST) *" error={fields.pricePaise}>
+            <input required type="number" min="0" step="0.01" value={form.price} onChange={set('price')} />
+          </Field>
+        )}
         <Field label="Struck price ₹" error={fields.mrpPaise}>
           <input type="number" min="0" step="0.01" value={form.mrp} onChange={set('mrp')} />
         </Field>
         <Field label="GST %" error={fields.taxPercent}>
           <input type="number" min="0" max="50" step="0.5" value={form.taxPercent} onChange={set('taxPercent')} />
         </Field>
+        <Field label="SAC code" hint="6 digits, printed with the price ('Including GST 18% · SAC …')" error={fields.sacCode}>
+          <input inputMode="numeric" pattern="\d{6}" maxLength={6} value={form.sacCode} onChange={set('sacCode')} />
+        </Field>
         <Field label="Sort order" error={fields.sort}>
           <input type="number" value={form.sort} onChange={set('sort')} />
         </Field>
         <Field label="Features (one per line)" error={fields.features}>
           <textarea rows={4} value={form.features} onChange={set('features')} />
+        </Field>
+        <Field label="How to avail (one step per line)" hint="Shown in the app under “How to avail?”" error={fields.howToAvail}>
+          <textarea rows={4} value={form.howToAvail} onChange={set('howToAvail')} />
         </Field>
         <label className="check">
           <input type="checkbox" checked={form.active} onChange={(e) => setForm((f) => ({ ...f, active: e.target.checked }))} /> Available for purchase

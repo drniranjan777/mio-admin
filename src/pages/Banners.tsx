@@ -221,6 +221,20 @@ function BannerView({ banner: b, targets, onClose, onEdit }: { banner: Banner; t
             <span>{titleCase(b.targeting)}</span>
           </li>
           <li>
+            <span className="muted">Type</span>
+            <span>{b.mediaType === 'video' ? (b.videoMissing ? 'Video (file missing — cover shown)' : 'Video') : 'Image'}</span>
+          </li>
+          <li>
+            <span className="muted">Audience</span>
+            <span>
+              {[
+                b.specialties.length ? b.specialties.join(', ') : 'All specialties',
+                b.genders.length ? b.genders.map(titleCase).join(' / ') : 'all genders',
+                b.locationClasses.length ? b.locationClasses.join(' / ') : 'Metro & Non-Metro',
+              ].join(' · ')}
+            </span>
+          </li>
+          <li>
             <span className="muted">Schedule</span>
             <span>
               {b.startDate ? fmtDate(b.startDate) : 'Now'} → {b.endDate ? fmtDate(b.endDate) : 'No end'}

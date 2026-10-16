@@ -8,6 +8,7 @@ import type { Permission } from '../lib/types';
 export const NAV: { to: string; label: string; icon: string; perm: Permission | null; end?: boolean }[] = [
   { to: '/', label: 'Dashboard', icon: '◧', perm: 'dashboard', end: true },
   { to: '/users', label: 'Users', icon: '👥', perm: 'users' },
+  { to: '/recovery', label: 'Account Recovery', icon: '📱', perm: 'users' },
   { to: '/access', label: 'Receptionist Access', icon: '🔑', perm: 'access' },
   { to: '/appointments', label: 'Appointments', icon: '📅', perm: 'appointments' },
   { to: '/conferences', label: 'Conferences', icon: '🎤', perm: 'conferences' },
