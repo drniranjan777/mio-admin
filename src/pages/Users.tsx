@@ -3,7 +3,7 @@ import { useSearchParams } from 'react-router-dom';
 
 import { api } from '../api/client';
 import { Badge, Button, Card, Field, Loadable, Modal, Pager, Select, Table } from '../components/ui';
-import { fmtDate, fmtDateTime, ROLE_LABEL, titleCase } from '../lib/format';
+import { feeLabel, fmtDate, fmtDateTime, mrCallLabel, ROLE_LABEL, titleCase } from '../lib/format';
 import type { Role, UserDetail, UserRow } from '../lib/types';
 import { useAction } from '../lib/useAction';
 import { useApi } from '../lib/useApi';
@@ -116,6 +116,8 @@ const PROFILE_FIELDS: [string, string][] = [
   ['councilRegNo', 'Council Reg. No'],
   ['availability', 'Availability'],
   ['employeeCode', 'Employee code'],
+  ['designation', 'Designation'],
+  ['employerStatus', 'Employer status (before 1.0.4)'],
   ['division', 'Division'],
 ];
 
@@ -192,6 +194,10 @@ function UserDrawer({ id, onClose, onChanged }: { id: string; onClose: () => voi
           const p = (d.profile ?? {}) as Record<string, unknown>;
           const practice = (p.practice ?? {}) as Record<string, string>;
           const company = (p.company ?? {}) as Record<string, string>;
+          // Receptionists keep their appointment settings under `final`.
+          const fin = (p.final ?? p) as Record<string, unknown>;
+          const mrCalls = mrCallLabel(fin.mrCall as Parameters<typeof mrCallLabel>[0]);
+          const fee = feeLabel(fin.consultation as Parameters<typeof feeLabel>[0]);
           return (
             <div className="stack">
               <div className="row between">
@@ -250,6 +256,18 @@ function UserDrawer({ id, onClose, onChanged }: { id: string; onClose: () => voi
                       <li>
                         <span className="muted">Company</span>
                         <span>{company.name}</span>
+                      </li>
+                    )}
+                    {mrCalls && (
+                      <li>
+                        <span className="muted">MR calls</span>
+                        <span>{mrCalls}</span>
+                      </li>
+                    )}
+                    {fee && (
+                      <li>
+                        <span className="muted">New patient fee</span>
+                        <span>{fee}</span>
                       </li>
                     )}
                   </ul>
