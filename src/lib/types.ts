@@ -76,6 +76,16 @@ export interface Person {
   name: string;
   mobile?: string;
   role?: string;
+  /** Mio code (DR00012 / RC00003) where the API sends it. */
+  code?: string | null;
+}
+
+/** Doctor ↔ receptionist link shown in the user list (active or pending). */
+export interface UserLink {
+  id: string;
+  code: string | null;
+  name: string;
+  status: 'active' | 'pending';
 }
 
 export interface Dashboard {
@@ -100,6 +110,8 @@ export interface UserRow {
   code?: string;
   detail?: string | null;
   onboarded: boolean;
+  /** Doctors: their receptionists; receptionists: the doctors they are tagged to. */
+  links?: UserLink[];
   lastLoginAt?: string;
   createdAt: string;
 }
@@ -159,7 +171,7 @@ export interface Plan {
   code: string;
   role: Role;
   name: string;
-  period: 'monthly' | 'yearly' | 'lifetime' | 'trial';
+  period: 'monthly' | 'quarterly' | 'yearly' | 'lifetime' | 'trial';
   pricePaise: number;
   mrpPaise: number | null;
   taxPercent: number;

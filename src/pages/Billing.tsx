@@ -140,6 +140,7 @@ function PlanForm({ plan, onClose, onSaved }: { plan: Plan | null; onClose: () =
         <Field label="Period" error={fields.period}>
           <select value={form.period} onChange={set('period')}>
             <option value="monthly">Monthly (30 days)</option>
+            <option value="quarterly">Quarterly (90 days)</option>
             <option value="yearly">Yearly (365 days)</option>
             <option value="lifetime">Lifetime</option>
             <option value="trial">Free trial (once per account)</option>

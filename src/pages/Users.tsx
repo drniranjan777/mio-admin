@@ -4,7 +4,7 @@ import { useSearchParams } from 'react-router-dom';
 import { api } from '../api/client';
 import { Badge, Button, Card, Field, Loadable, Modal, Pager, Select, Table } from '../components/ui';
 import { feeLabel, fmtDate, fmtDateTime, mrCallLabel, ROLE_LABEL, titleCase } from '../lib/format';
-import type { Role, UserDetail, UserRow } from '../lib/types';
+import type { Role, UserDetail, UserLink, UserRow } from '../lib/types';
 import { useAction } from '../lib/useAction';
 import { useApi } from '../lib/useApi';
 import { useDebounced } from '../lib/useDebounced';
@@ -16,6 +16,41 @@ const ROLES = [
   { value: 'mr' as const, label: 'MRs' },
   { value: 'receptionist' as const, label: 'Receptionists' },
 ];
+
+/** Header of the links column for the current role filter (none for MRs). */
+const LINKS_HEADER: Record<Role | '', string | null> = {
+  receptionist: 'Tagged doctors',
+  doctor: 'Receptionists',
+  mr: null,
+  '': 'Doctors / Receptionists',
+};
+
+/**
+ * Codes of the linked doctors / receptionists; each one opens that person.
+ * Pending links are greyed. Clicking a code does not open the row's own user.
+ */
+function LinkCodes({ links, onOpen }: { links?: UserLink[]; onOpen: (id: string) => void }) {
+  if (!links?.length) return <span className="muted">—</span>;
+  return (
+    <span className="link-codes">
+      {links.map((l) => (
+        <button
+          key={l.id}
+          type="button"
+          className={`link-code ${l.status === 'pending' ? 'pending' : ''}`}
+          title={`${l.name || 'No name yet'}${l.status === 'pending' ? ' · request pending' : ''}`}
+          onClick={(e) => {
+            e.stopPropagation();
+            onOpen(l.id);
+          }}
+        >
+          {l.code ?? '—'}
+          {l.status === 'pending' && <span className="link-pending"> (pending)</span>}
+        </button>
+      ))}
+    </span>
+  );
+}
 
 export function Users() {
   const [params, setParams] = useSearchParams();
@@ -78,6 +113,15 @@ export function Users() {
                   { key: 'code', header: 'Code', render: (r) => r.code ?? '—' },
                   { key: 'mobile', header: 'Mobile', render: (r) => r.mobile ?? '—' },
                   { key: 'detail', header: 'Specialty / Company', render: (r) => r.detail ?? '—' },
+                  ...(LINKS_HEADER[role]
+                    ? [
+                        {
+                          key: 'links',
+                          header: LINKS_HEADER[role]!,
+                          render: (r: UserRow) => (r.role === 'mr' ? <span className="muted">—</span> : <LinkCodes links={r.links} onOpen={setOpenId} />),
+                        },
+                      ]
+                    : []),
                   { key: 'onb', header: 'Registration', render: (r) => (r.onboarded ? 'Complete' : <span className="muted">Incomplete</span>) },
                   { key: 'status', header: 'Status', render: (r) => <Badge value={r.status} /> },
                   { key: 'joined', header: 'Joined', render: (r) => fmtDate(r.createdAt) },
@@ -99,7 +143,7 @@ export function Users() {
           }}
         />
       )}
-      {openId && <UserDrawer id={openId} onClose={() => setOpenId(null)} onChanged={state.reload} />}
+      {openId && <UserDrawer id={openId} onClose={() => setOpenId(null)} onChanged={state.reload} onOpenUser={setOpenId} />}
     </>
   );
 }
@@ -165,7 +209,7 @@ function ChangeMobile({ userId, current, onClose, onSaved }: { userId: string; c
   );
 }
 
-function UserDrawer({ id, onClose, onChanged }: { id: string; onClose: () => void; onChanged: () => void }) {
+function UserDrawer({ id, onClose, onChanged, onOpenUser }: { id: string; onClose: () => void; onChanged: () => void; onOpenUser: (id: string) => void }) {
   const state = useApi(() => api.get<UserDetail>(`/admin/users/${id}`), [id]);
   const { run, busy } = useAction();
   const confirm = useConfirm();
@@ -292,7 +336,16 @@ function UserDrawer({ id, onClose, onChanged }: { id: string; onClose: () => voi
                       <ul className="kv">
                         {d.access.map((a) => (
                           <li key={a.id}>
-                            <span>{a.with?.name ?? '—'}</span>
+                            <span>
+                              {a.with ? (
+                                <button type="button" className="link-code" onClick={() => onOpenUser(a.with!.id)} title="Open">
+                                  {a.with.code ?? '—'}
+                                </button>
+                              ) : (
+                                '—'
+                              )}{' '}
+                              {a.with?.name || '—'}
+                            </span>
                             <span>
                               <Badge value={a.status} /> <span className="muted">{a.permissions.join(', ')}</span>
                             </span>
